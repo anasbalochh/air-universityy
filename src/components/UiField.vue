@@ -2,7 +2,7 @@
   <div :class="['ui-field flex flex-col w-full', wrapperClass]">
     <div
       :class="[
-        'relative w-full transition-opacity duration-150',
+        'group relative w-full transition-opacity duration-150',
         disabled ? 'opacity-60 pointer-events-none' : 'opacity-100'
       ]"
       :data-variant="variant"
@@ -11,7 +11,8 @@
         v-if="label"
         :for="fieldId"
         :class="[
-          'absolute -top-3 left-6 z-[1] inline-flex items-center gap-1 rounded-full border border-transparent bg-white px-2 text-xs font-semibold text-slate-500',
+          'absolute z-[1] inline-flex items-center gap-1 transition-all duration-150',
+          appearanceLabelClasses,
           labelClass
         ]"
       >
@@ -21,10 +22,8 @@
 
       <div
         :class="[
-          'flex w-full items-center gap-3 rounded-[28px] border-2 bg-slate-50 px-6 transition-all duration-200',
-          error ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-rose-100' : 'border-amber-500 focus-within:border-blue-500 focus-within:ring-blue-100',
-          'focus-within:ring-4',
-          variant === 'textarea' ? 'py-4' : 'py-3',
+          'flex w-full items-center gap-3',
+          appearanceClasses,
           inputWrapperClass
         ]"
         data-slot="input-wrapper"
@@ -55,8 +54,8 @@
           :value="normalizedValue"
           @input="onInput"
           @change="onChange"
-          @focus="event => emit('focus', event)"
-          @blur="event => emit('blur', event)"
+          @focus="handleFocus"
+          @blur="handleBlur"
         />
 
         <select
@@ -72,8 +71,8 @@
           :autocomplete="autocomplete"
           v-bind="inputAttrs"
           @change="event => emit('change', event)"
-          @focus="event => emit('focus', event)"
-          @blur="event => emit('blur', event)"
+          @focus="handleFocus"
+          @blur="handleBlur"
         >
           <option
             v-if="placeholder && !multiple"
@@ -133,8 +132,8 @@
           :value="normalizedValue"
           @input="onInput"
           @change="onChange"
-          @focus="event => emit('focus', event)"
-          @blur="event => emit('blur', event)"
+          @focus="handleFocus"
+          @blur="handleBlur"
         />
 
         <button
@@ -142,6 +141,7 @@
           type="button"
           class="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-700 focus:outline-none"
           @click="showPassword = !showPassword"
+          @mousedown.prevent
           :aria-label="showPassword ? 'Hide password' : 'Show password'"
         >
           <svg
@@ -223,6 +223,11 @@ const props = defineProps({
     default: 'input',
     validator: value => ['input', 'textarea', 'select'].includes(value)
   },
+  appearance: {
+    type: String,
+    default: 'pill',
+    validator: value => ['pill', 'filled'].includes(value)
+  },
   placeholder: { type: String, default: '' },
   options: {
     type: Array,
@@ -275,6 +280,7 @@ const generatedId = `ui-field-${Math.random().toString(36).slice(2, 10)}`;
 const fieldId = computed(() => props.id || generatedId);
 
 const showPassword = ref(false);
+const isFocused = ref(false);
 
 const resolvedType = computed(() => {
   if (props.type === 'password' && props.togglePassword) {
@@ -307,6 +313,74 @@ const hasRightIcon = computed(() => {
   return Boolean(slots['icon-right']);
 });
 
+const isFilled = computed(() => {
+  if (props.variant === 'select') {
+    if (props.multiple) {
+      return Array.isArray(selectBinding.value) && selectBinding.value.length > 0;
+    }
+    const value = selectBinding.value;
+    return value !== '' && value !== null && value !== undefined;
+  }
+
+  const value = normalizedValue.value;
+
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  if (typeof value === 'number') {
+    return true;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  return value !== '' && value !== null && value !== undefined;
+});
+
+const shouldFloatLabel = computed(() => {
+  if (props.appearance !== 'filled') return true;
+  return isFocused.value || isFilled.value || Boolean(props.placeholder);
+});
+
+const appearanceClasses = computed(() => {
+  if (props.appearance === 'filled') {
+    return [
+      'transition-all duration-200 rounded-t-2xl rounded-b-lg border border-transparent bg-slate-100 px-5 shadow-inner focus-within:bg-white',
+      props.variant === 'textarea' ? 'pt-7 pb-3' : 'pt-5 pb-2',
+      props.error
+        ? 'border-b-2 border-b-rose-500 focus-within:border-b-rose-500'
+        : 'border-b-2 border-b-slate-200 focus-within:border-b-blue-500'
+    ];
+  }
+
+  return [
+    'transition-all duration-200 rounded-[28px] border-2 bg-slate-50 px-6',
+    props.variant === 'textarea' ? 'py-4' : 'py-3',
+    props.error
+      ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-rose-100'
+      : 'border-amber-500 focus-within:border-blue-500 focus-within:ring-blue-100',
+    'focus-within:ring-4'
+  ];
+});
+
+const appearanceLabelClasses = computed(() => {
+  if (props.appearance === 'filled') {
+    return [
+      'left-5 px-1 text-sm font-medium pointer-events-none transform origin-top-left',
+      shouldFloatLabel.value ? '-top-2 scale-90 text-slate-600' : 'top-3 scale-100 text-slate-500',
+      isFocused.value ? 'text-blue-600' : '',
+      'group-focus-within:text-blue-600'
+    ];
+  }
+
+  return [
+    '-top-3 left-6 rounded-full bg-white px-2 text-xs font-semibold uppercase tracking-wide text-slate-500 pointer-events-none',
+    'group-focus-within:text-blue-600'
+  ];
+});
+
 function onInput(event) {
   let value = event.target.value;
 
@@ -320,6 +394,16 @@ function onInput(event) {
 
 function onChange(event) {
   emit('change', event);
+}
+
+function handleFocus(event) {
+  isFocused.value = true;
+  emit('focus', event);
+}
+
+function handleBlur(event) {
+  isFocused.value = false;
+  emit('blur', event);
 }
 
 function optionKey(option) {

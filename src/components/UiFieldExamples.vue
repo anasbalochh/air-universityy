@@ -5,6 +5,7 @@
       v-model="form.email"
       placeholder="liamoliver@gmail.com"
       autocomplete="email"
+      appearance="filled"
       :inputWrapperClass="'bg-[#F8F6F0]'"
     />
 
@@ -16,6 +17,7 @@
       placeholder="********"
       autocomplete="current-password"
       hint="At least 8 characters."
+      appearance="filled"
       :inputWrapperClass="'bg-[#F8F6F0]'"
     />
 
@@ -23,6 +25,7 @@
       label="Username"
       v-model="form.username"
       placeholder="Choose a username"
+      appearance="filled"
       :inputWrapperClass="'bg-[#F8F6F0]'"
     >
       <template #icon-left>
@@ -47,6 +50,7 @@
       v-model="form.about"
       rows="4"
       placeholder="Tell us about yourself"
+      appearance="filled"
       :inputWrapperClass="'bg-[#F8F6F0]'"
     />
 
@@ -56,6 +60,7 @@
       v-model="form.department"
       placeholder="Select a department"
       :options="departmentOptions"
+      appearance="filled"
       :inputWrapperClass="'bg-[#F8F6F0]'"
     />
   </div>
