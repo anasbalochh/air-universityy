@@ -5,7 +5,7 @@
                 'relative w-full transition-opacity duration-150 cursor-text',
                 disabled ? 'opacity-60 pointer-events-none' : 'opacity-100',
             ]"
-            :data-variant="variant"
+            data-component="ui-select-field"
             @click="focusInput"
         >
             <!-- Floating Label -->
@@ -25,14 +25,13 @@
                 <span v-if="required" class="text-rose-500">*</span>
             </label>
 
-            <!-- Input Wrapper -->
+            <!-- Select Wrapper -->
             <div
                 :class="[
-                    'flex w-full min-h-14 items-center gap-3 border-2 rounded-lg px-4 transition-all duration-200',
+                    'flex w-full min-h-14 items-center gap-3 border-2 rounded-lg px-4 transition-all duration-200 py-3 pb-2.5',
                     error
                         ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-200'
                         : 'border-[#B59B5A] focus-within:ring-2 focus-within:ring-[#B59B5A]/30',
-                    variant === 'textarea' ? 'py-4' : 'py-3 pb-2.5',
                     inputWrapperClass,
                 ]"
                 data-slot="input-wrapper"
@@ -53,8 +52,6 @@
                 >
                     <slot
                         name="icon-left"
-                        :password-visible="passwordVisibility"
-                        :toggle-password="handleTogglePassword"
                         :focus-input="focusInput"
                     >
                         <component
@@ -73,32 +70,9 @@
                     </slot>
                 </component>
 
-                <!-- Textarea -->
-                <textarea
-                    v-if="variant === 'textarea'"
-                    ref="inputRef"
-                    :id="fieldId"
-                    :name="name"
-                    :rows="rows"
-                    class="ui-field__control h-full w-full resize-none bg-transparent text-base text-slate-900 outline-none placeholder-transparent"
-                    :class="inputClass"
-                    :placeholder="placeholder"
-                    :autocomplete="autocomplete"
-                    :disabled="disabled"
-                    :readonly="readonly"
-                    :required="required"
-                    v-bind="inputAttrs"
-                    :value="normalizedValue"
-                    @input="onInput"
-                    @change="onChange"
-                    @focus="onFocus"
-                    @blur="onBlur"
-                />
-
                 <!-- Select -->
                 <select
-                    v-else-if="variant === 'select'"
-                    ref="inputRef"
+                    ref="selectRef"
                     v-model="selectBinding"
                     :id="fieldId"
                     :name="name"
@@ -127,106 +101,15 @@
                                 {{ child.label }}
                             </option>
                         </optgroup>
-                        <option v-else :value="option.value" :disabled="option.disabled">
+                        <option
+                            v-else
+                            :value="option.value"
+                            :disabled="option.disabled"
+                        >
                             {{ option.label }}
                         </option>
                     </template>
                 </select>
-
-                <!-- Input -->
-                <input
-                    v-else
-                    ref="inputRef"
-                    :id="fieldId"
-                    :name="name"
-                    :type="resolvedType"
-                    class="ui-field__control h-full w-full bg-transparent text-base text-black outline-none placeholder-transparent"
-                    :class="inputClass"
-                    :placeholder="placeholder"
-                    :autocomplete="autocomplete"
-                    :disabled="disabled"
-                    :readonly="readonly"
-                    :required="required"
-                    v-bind="inputAttrs"
-                    :value="normalizedValue"
-                    @input="onInput"
-                    @change="onChange"
-                    @focus="onFocus"
-                    @blur="onBlur"
-                />
-
-                <!-- Toggle Password -->
-                <button
-                    v-if="shouldShowPasswordToggle"
-                    class="ui-field__icon-btn flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-700 focus:outline-none"
-                    :class="togglePasswordClass"
-                    v-bind="togglePasswordPropsComputed"
-                    @click.stop="handleTogglePassword($event, 'toggle-button')"
-                    :aria-pressed="passwordVisibility"
-                    :aria-label="
-                        passwordVisibility
-                            ? togglePasswordAriaLabelsComputed.hide
-                            : togglePasswordAriaLabelsComputed.show
-                    "
-                >
-                    <slot
-                        name="toggle-password"
-                        :password-visible="passwordVisibility"
-                        :toggle-password="handleTogglePassword"
-                    >
-                        <component
-                            v-if="currentToggleIcon && isComponent(currentToggleIcon)"
-                            :is="currentToggleIcon"
-                            v-bind="togglePasswordIconPropsData"
-                        />
-                        <span
-                            v-else-if="typeof currentToggleIcon === 'string'"
-                            v-html="currentToggleIcon"
-                        />
-                        <template v-else>
-                            <svg
-                                v-if="!passwordVisibility"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="h-5 w-5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M1.5 12s3.75-7.5 10.5-7.5S22.5 12 22.5 12s-3.75 7.5-10.5 7.5S1.5 12 1.5 12z"
-                                />
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"
-                                />
-                            </svg>
-                            <svg
-                                v-else
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="h-5 w-5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M3.98 8.223A10.477 10.477 0 001.5 12s3.75 7.5 10.5 7.5a10.48 10.48 0 005.632-1.72M6.228 6.228A10.45 10.45 0 0112 4.5c6.75 0 10.5 7.5 10.5 7.5a10.499 10.499 0 01-4.477 4.688M6.228 6.228L3 3m3.228 3.228l11.544 11.544M17.772 17.772L21 21"
-                                />
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9.755 9.755a3.75 3.75 0 014.49 4.49"
-                                />
-                            </svg>
-                        </template>
-                    </slot>
-                </button>
 
                 <!-- Right Icon -->
                 <component
@@ -244,8 +127,6 @@
                 >
                     <slot
                         name="icon-right"
-                        :password-visible="passwordVisibility"
-                        :toggle-password="handleTogglePassword"
                         :focus-input="focusInput"
                     >
                         <component
@@ -263,6 +144,36 @@
                         />
                     </slot>
                 </component>
+
+                <!-- Arrow -->
+                <component
+                    v-else-if="shouldShowArrow"
+                    :is="arrowIsComponent ? arrowIconValue : 'span'"
+                    class="flex shrink-0 items-center justify-center text-base text-slate-500"
+                    :class="arrowIconClass"
+                    v-bind="arrowIconPropsData"
+                    aria-hidden="true"
+                >
+                    <slot name="select-arrow">
+                        <span
+                            v-if="typeof arrowIconValue === 'string'"
+                            v-html="arrowIconValue"
+                        />
+                        <svg
+                            v-else
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            class="h-5 w-5"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M10 12a1 1 0 01-.707-.293l-3-3a1 1 0 111.414-1.414L10 9.586l2.293-2.293a1 1 0 111.414 1.414l-3 3A1 1 0 0110 12z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                    </slot>
+                </component>
             </div>
         </div>
 
@@ -277,28 +188,28 @@
 </template>
 
 <script setup>
-import { computed, ref, useSlots, watch } from "vue";
+import { computed, ref, useSlots } from "vue";
 
 const props = defineProps({
     id: String,
     label: String,
     modelValue: [String, Number, Boolean, Array, Object],
-    type: { type: String, default: "text" },
-    variant: { type: String, default: "input" },
-    placeholder: String,
     options: { type: Array, default: () => [] },
+    multiple: Boolean,
+    placeholder: String,
     disabled: Boolean,
     readonly: Boolean,
     required: Boolean,
     hint: String,
     error: String,
-    rows: { type: Number, default: 4 },
-    multiple: Boolean,
     autocomplete: String,
     name: String,
     icon: String,
     iconPosition: { type: String, default: "right" },
-    togglePassword: Boolean,
+    hideArrow: Boolean,
+    arrowIcon: [String, Object, Function],
+    arrowIconClass: [String, Array, Object],
+    arrowIconProps: { type: Object, default: () => ({}) },
     inputClass: [String, Array, Object],
     inputWrapperClass: [String, Array, Object],
     labelClass: [String, Array, Object],
@@ -314,88 +225,25 @@ const props = defineProps({
     rightIconClass: [String, Array, Object],
     leftIconClick: Function,
     rightIconClick: Function,
-    leftIconTogglePassword: Boolean,
-    rightIconTogglePassword: Boolean,
     leftIconInteractive: { type: Boolean, default: undefined },
     rightIconInteractive: { type: Boolean, default: undefined },
-    passwordVisible: { type: Boolean, default: undefined },
-    initialPasswordVisible: { type: Boolean, default: false },
-    togglePasswordClass: [String, Array, Object],
-    togglePasswordProps: { type: Object, default: () => ({}) },
-    togglePasswordAriaLabels: {
-        type: Object,
-        default: () => ({
-            show: "Show password",
-            hide: "Hide password",
-        }),
-    },
-    togglePasswordIcons: {
-        type: Object,
-        default: () => ({
-            show: null,
-            hide: null,
-        }),
-    },
-    togglePasswordIconProps: { type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits([
     "update:modelValue",
-    "input",
     "change",
     "focus",
     "blur",
     "icon-left-click",
     "icon-right-click",
-    "toggle-password",
-    "toggle-password-click",
-    "update:passwordVisible",
 ]);
 
 const slots = useSlots();
-const inputRef = ref(null);
+const selectRef = ref(null);
 const focused = ref(false);
 
-const generatedId = `ui-field-${Math.random().toString(36).slice(2, 10)}`;
+const generatedId = `ui-select-${Math.random().toString(36).slice(2, 10)}`;
 const fieldId = computed(() => props.id || generatedId);
-
-const passwordVisibleState = ref(
-    props.passwordVisible ?? props.initialPasswordVisible
-);
-
-watch(
-    () => props.passwordVisible,
-    (value) => {
-        if (value !== undefined) {
-            passwordVisibleState.value = value;
-        }
-    }
-);
-
-const passwordVisibility = computed({
-    get: () =>
-        props.type === "password"
-            ? props.passwordVisible ?? passwordVisibleState.value
-            : false,
-    set: (value) => {
-        if (props.passwordVisible === undefined) {
-            passwordVisibleState.value = value;
-        }
-        emit("update:passwordVisible", value);
-    },
-});
-
-const resolvedType = computed(() => {
-    if (props.variant !== "input") {
-        return props.type;
-    }
-    if (props.type === "password") {
-        return passwordVisibility.value ? "text" : "password";
-    }
-    return props.type;
-});
-
-const normalizedValue = computed(() => props.modelValue ?? "");
 
 const selectBinding = computed({
     get: () =>
@@ -439,18 +287,14 @@ const isLeftIconInteractive = computed(() => {
     if (props.leftIconInteractive !== undefined) {
         return props.leftIconInteractive;
     }
-    return (
-        props.leftIconTogglePassword || typeof props.leftIconClick === "function"
-    );
+    return typeof props.leftIconClick === "function";
 });
 
 const isRightIconInteractive = computed(() => {
     if (props.rightIconInteractive !== undefined) {
         return props.rightIconInteractive;
     }
-    return (
-        props.rightIconTogglePassword || typeof props.rightIconClick === "function"
-    );
+    return typeof props.rightIconClick === "function";
 });
 
 const leftIconAttrsComputed = computed(() => {
@@ -477,65 +321,32 @@ const rightIconAttrsComputed = computed(() => {
 
 const leftIconPropsData = computed(() => props.leftIconProps || {});
 const rightIconPropsData = computed(() => props.rightIconProps || {});
-const togglePasswordIconPropsData = computed(
-    () => props.togglePasswordIconProps || {}
-);
 
-const togglePasswordAriaLabelsComputed = computed(() => ({
-    show: props.togglePasswordAriaLabels?.show ?? "Show password",
-    hide: props.togglePasswordAriaLabels?.hide ?? "Hide password",
-}));
+const arrowIconPropsData = computed(() => props.arrowIconProps || {});
+const arrowIconValue = computed(() => props.arrowIcon ?? null);
+const arrowIsComponent = computed(() => {
+    const icon = arrowIconValue.value;
+    return icon && typeof icon !== "string";
+});
 
-const shouldShowPasswordToggle = computed(
+const shouldShowArrow = computed(
     () =>
-        props.variant === "input" &&
-        props.type === "password" &&
-        props.togglePassword
+        !props.multiple &&
+        !props.hideArrow &&
+        !hasRightIcon.value
 );
-
-const currentToggleIcon = computed(() => {
-    const icons = props.togglePasswordIcons || {};
-    return passwordVisibility.value ? icons.hide ?? null : icons.show ?? null;
-});
-
-const togglePasswordPropsComputed = computed(() => {
-    const attrs = { ...(props.togglePasswordProps || {}) };
-    attrs.type = attrs.type ?? "button";
-    if (props.disabled || props.readonly) {
-        attrs.disabled = true;
-    }
-    return attrs;
-});
 
 const isActive = computed(() => {
     if (focused.value) return true;
-
-    if (props.variant === "select") {
-        const value = selectBinding.value;
-        if (props.multiple) {
-            return Array.isArray(value) && value.length > 0;
-        }
-        return value !== "" && value !== null && value !== undefined;
-    }
-
-    const value = normalizedValue.value;
-    if (Array.isArray(value)) {
-        return value.length > 0;
+    const value = selectBinding.value;
+    if (props.multiple) {
+        return Array.isArray(value) && value.length > 0;
     }
     return value !== "" && value !== null && value !== undefined;
 });
 
 function isComponent(value) {
     return value && (typeof value === "object" || typeof value === "function");
-}
-
-function onInput(e) {
-    let value = e.target.value;
-    if (props.type === "number") {
-        value = value === "" ? "" : Number(value);
-    }
-    emit("update:modelValue", value);
-    emit("input", e);
 }
 
 function onChange(e) {
@@ -554,23 +365,9 @@ function onBlur(e) {
 
 function focusInput() {
     if (props.disabled) return;
-    if (inputRef.value && typeof inputRef.value.focus === "function") {
-        inputRef.value.focus();
+    if (selectRef.value && typeof selectRef.value.focus === "function") {
+        selectRef.value.focus();
     }
-}
-
-function handleTogglePassword(event, source = "toggle-button") {
-    if (props.disabled || props.readonly || props.type !== "password") {
-        return;
-    }
-    if (event?.preventDefault) {
-        event.preventDefault();
-    }
-    emit("toggle-password-click", { event, source });
-    const next = !passwordVisibility.value;
-    passwordVisibility.value = next;
-    emit("toggle-password", { visible: next, event, source });
-    focusInput();
 }
 
 function handleLeftIconClick(event) {
@@ -578,9 +375,7 @@ function handleLeftIconClick(event) {
     if (typeof props.leftIconClick === "function") {
         props.leftIconClick(event);
     }
-    if (props.leftIconTogglePassword && props.type === "password") {
-        handleTogglePassword(event, "left-icon");
-    } else if (isLeftIconInteractive.value) {
+    if (isLeftIconInteractive.value) {
         focusInput();
     }
 }
@@ -590,9 +385,7 @@ function handleRightIconClick(event) {
     if (typeof props.rightIconClick === "function") {
         props.rightIconClick(event);
     }
-    if (props.rightIconTogglePassword && props.type === "password") {
-        handleTogglePassword(event, "right-icon");
-    } else if (isRightIconInteractive.value) {
+    if (isRightIconInteractive.value) {
         focusInput();
     }
 }
